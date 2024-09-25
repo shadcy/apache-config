@@ -1,0 +1,31 @@
+RewriteEngine On
+RewriteBase /en/
+
+# Enable detailed mod_rewrite logging (Apache 2.4+)
+LogLevel alert rewrite:trace3
+
+# Serve files or directories directly if they exist
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [E=FILE_EXISTS:true,L]
+
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [E=DIR_EXISTS:true,L]
+
+# Always set the checked path for debugging purposes
+RewriteCond %{DOCUMENT_ROOT}/en/$1.html -f
+RewriteRule ^(.+)$ /en/$1.html [E=HTML_EXISTS:true,E=CHECKED_PATH:%{DOCUMENT_ROOT}/en/$1.html,L]
+
+# Set checked path even if the condition is not met (for debugging)
+RewriteRule ^(.+)$ - [E=CHECKED_PATH:%{DOCUMENT_ROOT}/en/$1.html]
+
+# Only apply index fallback if neither a file nor directory exists
+RewriteCond %{ENV:FILE_EXISTS} !true
+RewriteCond %{ENV:DIR_EXISTS} !true
+RewriteRule ^ /en/about.html [E=INDEX_FALLBACK:true,L]
+
+# # Output debugging headers
+Header set X-Debug-FileExists "%{FILE_EXISTS}e"
+Header set X-Debug-DirExists "%{DIR_EXISTS}e"
+Header set X-Debug-HTMLExists "%{HTML_EXISTS}e"
+Header set X-Debug-Checked-Path "%{CHECKED_PATH}e"
+Header set X-Debug-IndexFallback "%{INDEX_FALLBACK}e"
